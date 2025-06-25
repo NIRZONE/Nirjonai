@@ -312,10 +312,10 @@
             };
             
             // Function to add a message to the chat
-            function addMessage(text, isUser = false, extras = null) {
+            function addMessage(text, isUser  = false, extras = null) {
                 const messageDiv = document.createElement('div');
                 messageDiv.classList.add('message');
-                messageDiv.classList.add(isUser ? 'user-message' : 'ai-message');
+                messageDiv.classList.add(isUser  ? 'user-message' : 'ai-message');
                 
                 if (typeof text === 'string') {
                     messageDiv.textContent = text;
@@ -348,7 +348,7 @@
                 }
                 
                 // Add memory info for AI messages
-                if (!isUser) {
+                if (!isUser ) {
                     const memoryInfo = document.createElement('div');
                     memoryInfo.classList.add('memory-info');
                     memoryInfo.textContent = "Context-aware response";
