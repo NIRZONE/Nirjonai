@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced AI Assistant</title>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --accent: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .ai-container {
+            width: 100%;
+            max-width: 800px;
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 80vh;
+        }
+        
+        .ai-header {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .ai-header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+        
+        .ai-header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .ai-body {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .message {
+            max-width: 75%;
+            padding: 12px 15px;
+            border-radius: 18px;
+            line-height: 1.4;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .user-message {
+            align-self: flex-end;
+            background-color: var(--primary);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .ai-message {
+            align-self: flex-start;
+            background-color: #f1f3f5;
+            color: var(--dark);
+            border-bottom-left-radius: 5px;
+        }
+        
+        .ai-message img {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+        
+        .ai-message a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .ai-message a:hover {
+            text-decoration: underline;
+        }
+        
+        .ai-typing {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            opacity: 0.7;
+            padding: 10px 15px;
+        }
+        
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--gray);
+            border-radius: 50%;
+            animation: typingAnimation 1.4s infinite ease-in-out;
+        }
+        
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        .ai-footer {
+            padding: 15px 20px;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+        }
+        
+        #user-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 30px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        #user-input:focus {
+            border-color: var(--primary);
+        }
+        
+        #send-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s;
+        }
+        
+        #send-btn:hover {
+            background-color: var(--secondary);
+        }
+        
+        #api-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 0.7rem;
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 3px 8px;
+            border-radius: 10px;
+        }
+        
+        .status-connected {
+            color: #4caf50;
+        }
+        
+        .status-disconnected {
+            color: #f44336;
+        }
+        
+        .memory-info {
+            font-size: 0.7rem;
+            color: var(--gray);
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes typingAnimation {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-5px); }
+        }
+        
+        .powered-by {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--gray);
+            margin-top: 5px;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .ai-container {
+                height: 90vh;
+                border-radius: 15px;
+            }
+            
+            .message {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="ai-container">
+        <div class="ai-header">
+            <h1>Advanced AI Assistant</h1>
+            <p>Now with memory, API integration, and multimedia support</p>
+            <div id="api-status" class="status-connected">API: Connected</div>
+        </div>
+        
+        <div class="ai-body" id="chat-container">
+            <div class="ai-message">
+                Hello! I'm your enhanced AI assistant now powered by Gemini API. How can I help you today?
+                <div class="memory-info">Context memory is active</div>
+            </div>
+        </div>
+        
+        <div class="ai-footer">
+            <input type="text" id="user-input" placeholder="Type your message here..." autocomplete="off">
+            <button id="send-btn">Send</button>
+        </div>
+        
+        <div class="powered-by">
+            Powered by Gemini API & JavaScript
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatContainer = document.getElementById('chat-container');
+            const userInput = document.getElementById('user-input');
+            const sendBtn = document.getElementById('send-btn');
+            const apiStatus = document.getElementById('api-status');
+            
+            // API Configuration
+            const API_KEY = 'AIzaSyDw5DVuJ3YPCTL-QpKmXTlIjCAK4Fsnz4s'; // Your Gemini API key
+            const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+            
+            // Conversation memory
+            let conversationHistory = [
+                {
+                    role: "model",
+                    parts: [{ text: "Hello! I'm your enhanced AI assistant now powered by Gemini API. How can I help you today?" }]
+                }
+            ];
+            
+            // Enhanced AI responses database for fallback
+            const aiResponses = {
+                greetings: ["Hello!", "Hi there!", "Greetings!", "Nice to meet you!", "Hey! How's it going?"],
+                questions: {
+                    "how are you": ["I'm doing well, thanks for asking!", "I'm great! How about you?", "Functioning optimally, thank you!"],
+                    "what can you do": ["I can answer questions, analyze data, generate text, and much more using Gemini API.", 
+                                      "I'm now powered by Google's Gemini and can handle complex queries.", 
+                                      "My capabilities include conversation, information lookup, creative writing, and more."],
+                    "who created you": ["I was enhanced by a developer using Google's Gemini API.", 
+                                      "My intelligence comes from Google's Gemini model, wrapped in a custom interface.", 
+                                      "I combine Google's advanced AI with custom programming."],
+                    "your name": ["I'm your AI Assistant powered by Gemini!", "You can call me Gemini Helper.", "My name is AI-3000 with Gemini capabilities."],
+                    "time": [`The current time is ${new Date().toLocaleTimeString()}.`, `My clock shows ${new Date().toLocaleTimeString()}.`],
+                    "date": [`Today is ${new Date().toLocaleDateString()}.`, `The date is ${new Date().toLocaleDateString()}.`],
+                    "thanks": ["You're welcome!", "Happy to help!", "Anytime!", "Glad I could assist!"],
+                    "joke": ["Why don't scientists trust atoms? Because they make up everything!", 
+                            "Did you hear about the mathematician who's afraid of negative numbers? He'll stop at nothing to avoid them!",
+                            "Why did the scarecrow win an award? Because he was outstanding in his field!"]
+                },
+                multimedia: {
+                    "show me a cat": {
+                        text: "Here's a cute cat image for you:",
+                        image: "https://placekitten.com/400/300"
+                    },
+                    "show me a dog": {
+                        text: "Here's a friendly dog:",
+                        image: "https://placedog.net/400/300"
+                    },
+                    "learn more": {
+                        text: "Here are some helpful resources:",
+                        links: [
+                            {text: "Gemini API Documentation", url: "https://developers.generativeai.google/"},
+                            {text: "JavaScript Guide", url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript"}
+                        ]
+                    }
+                },
+                fallbacks: [
+                    "I'm analyzing your question...",
+                    "That's an interesting point. Let me think about that...",
+                    "I'm still learning. Could you provide more details?",
+                    "I'm consulting my knowledge base..."
+                ]
+            };
+            
+            // Function to add a message to the chat
+            function addMessage(text, isUser = false, extras = null) {
+                const messageDiv = document.createElement('div');
+                messageDiv.classList.add('message');
+                messageDiv.classList.add(isUser ? 'user-message' : 'ai-message');
+                
+                if (typeof text === 'string') {
+                    messageDiv.textContent = text;
+                } else {
+                    // Handle structured content from API
+                    messageDiv.innerHTML = text;
+                }
+                
+                if (extras) {
+                    if (extras.image) {
+                        const img = document.createElement('img');
+                        img.src = extras.image;
+                        img.alt = "AI generated image";
+                        messageDiv.appendChild(img);
+                    }
+                    
+                    if (extras.links) {
+                        const linksDiv = document.createElement('div');
+                        linksDiv.style.marginTop = '10px';
+                        extras.links.forEach(link => {
+                            const a = document.createElement('a');
+                            a.href = link.url;
+                            a.textContent = link.text;
+                            a.target = "_blank";
+                            linksDiv.appendChild(a);
+                            linksDiv.appendChild(document.createElement('br'));
+                        });
+                        messageDiv.appendChild(linksDiv);
+                    }
+                }
+                
+                // Add memory info for AI messages
+                if (!isUser) {
+                    const memoryInfo = document.createElement('div');
+                    memoryInfo.classList.add('memory-info');
+                    memoryInfo.textContent = "Context-aware response";
+                    messageDiv.appendChild(memoryInfo);
+                }
+                
+                chatContainer.appendChild(messageDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+            
+            // Function to show typing indicator
+            function showTyping() {
+                const typingDiv = document.createElement('div');
+                typingDiv.classList.add('ai-typing');
+                typingDiv.innerHTML = `
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                `;
+                chatContainer.appendChild(typingDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                return typingDiv;
+            }
+            
+            // Function to hide typing indicator
+            function hideTyping(typingElement) {
+                if (typingElement && typingElement.parentNode) {
+                    typingElement.parentNode.removeChild(typingElement);
+                }
+            }
+            
+            // Function to call Gemini API
+            async function callGeminiAPI(prompt) {
+                try {
+                    // Add user message to conversation history
+                    conversationHistory.push({
+                        role: "user",
+                        parts: [{ text: prompt }]
+                    });
+                    
+                    const response = await fetch(`${API_URL}?key=${API_KEY}`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            contents: conversationHistory,
+                            generationConfig: {
+                                temperature: 0.9,
+                                topK: 1,
+                                topP: 1,
+                                maxOutputTokens: 2048,
+                                stopSequences: []
+                            }
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`API request failed with status ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    const aiResponse = data.candidates[0].content.parts[0].text;
+                    
+                    // Add AI response to conversation history
+                    conversationHistory.push({
+                        role: "model",
+                        parts: [{ text: aiResponse }]
+                    });
+                    
+                    return aiResponse;
+                } catch (error) {
+                    console.error("Error calling Gemini API:", error);
+                    apiStatus.classList.remove('status-connected');
+                    apiStatus.classList.add('status-disconnected');
+                    apiStatus.textContent = "API: Disconnected (using fallback)";
+                    return null;
+                }
+            }
+            
+            // Function to process user input and generate response
+            async function processInput(input) {
+                input = input.toLowerCase().trim();
+                
+                // Show typing indicator
+                const typingElement = showTyping();
+                
+                // Check for multimedia commands first
+                let multimediaResponse = null;
+                for (const [keyword, response] of Object.entries(aiResponses.multimedia)) {
+                    if (input.includes(keyword)) {
+                        multimediaResponse = response;
+                        break;
+                    }
+                }
+                
+                if (multimediaResponse) {
+                    setTimeout(() => {
+                        hideTyping(typingElement);
+                        addMessage(multimediaResponse.text, false, multimediaResponse);
+                    }, 1000);
+                    return;
+                }
+                
+                // Try to get response from Gemini API
+                const apiResponse = await callGeminiAPI(input);
+                
+                // If API failed, use local responses
+                let response = apiResponse;
+                
+                if (!apiResponse) {
+                    let found = false;
+                    
+                    // Check for greetings
+                    if (/hello|hi|hey|greetings/i.test(input)) {
+                        const options = aiResponses.greetings;
+                        response = options[Math.floor(Math.random() * options.length)];
+                        found = true;
+                    }
+                    
+                    // Check for specific questions
+                    if (!found) {
+                        for (const [keyword, answers] of Object.entries(aiResponses.questions)) {
+                            if (input.includes(keyword)) {
+                                const options = answers;
+                                response = options[Math.floor(Math.random() * options.length)];
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Fallback response
+                    if (!found) {
+                        const options = aiResponses.fallbacks;
+                        response = options[Math.floor(Math.random() * options.length)];
+                    }
+                }
+                
+                // Display the response
+                setTimeout(() => {
+                    hideTyping(typingElement);
+                    addMessage(response);
+                }, Math.random() * 1000);
+            }
+            
+            // Event listener for send button
+            sendBtn.addEventListener('click', function() {
+                const message = userInput.value.trim();
+                if (message) {
+                    addMessage(message, true);
+                    userInput.value = '';
+                    processInput(message);
+                }
+            });
+            
+            // Event listener for Enter key
+            userInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendBtn.click();
+                }
+            });
+            
+            // Set focus to input field
+            userInput.focus();
+            
+            // Feature: Initial greeting with capabilities
+            setTimeout(() => {
+                const typingElement = showTyping();
+                setTimeout(() => {
+                    hideTyping(typingElement);
+                    addMessage("I can now remember our conversation, show images and links, and provide more detailed responses thanks to the Gemini integration. Try asking complex questions or say 'show me a cat'!");
+                }, 1500);
+            }, 3000);
+        });
+    </script>
+</body>
+</html>
